@@ -1,10 +1,14 @@
 package com.example.fitness.service;
 
+import com.example.fitness.dto.LoginRequest;
 import com.example.fitness.dto.RegisterRequest;
 import com.example.fitness.dto.UserResponse;
 import com.example.fitness.model.User;
+import com.example.fitness.model.UserRole;
 import com.example.fitness.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,12 +21,15 @@ import java.util.List;
 
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     public UserResponse register(RegisterRequest registerRequest) {
+        UserRole role = registerRequest.getRole() != null ? registerRequest.getRole() : UserRole.USER;
         User user = User.builder()
                 .email(registerRequest.getEmail())
                 .firstName(registerRequest.getFirstName())
                 .lastName(registerRequest.getLastName())
-                .password(registerRequest.getPassword())
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .role(role)
                 .build();
 //        User user = new User(
 //                null,
@@ -48,7 +55,7 @@ public class UserService {
 
     }
 
-    private UserResponse mapToResponse(User savedUser) {
+    public UserResponse mapToResponse(User savedUser) {
         UserResponse userResponse = new UserResponse();
         userResponse.setId(savedUser.getId());
         userResponse.setEmail(savedUser.getEmail());
@@ -59,4 +66,15 @@ public class UserService {
         userResponse.setUpdatedAt(savedUser.getUpdatedAt());
         return userResponse;
     }
+
+    public  User authenticate(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+        if(user==null)
+            throw new RuntimeException("Invalid credentials");
+        if(!passwordEncoder.matches(loginRequest.getPassword(),user.getPassword())){
+            throw new RuntimeException("Invalid credentials");
+        }
+        return user;
+    }
+
 }
