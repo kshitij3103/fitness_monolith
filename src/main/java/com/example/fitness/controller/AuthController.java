@@ -8,6 +8,7 @@ import com.example.fitness.dto.UserResponse;
 import com.example.fitness.model.User;
 import com.example.fitness.repository.UserRepository;
 import com.example.fitness.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,7 +30,8 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
+
         return  ResponseEntity.ok(userService.register(registerRequest));
     }
     @PostMapping("/login")
